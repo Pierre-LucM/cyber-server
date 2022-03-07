@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 export class Database{
-    connection:mongoose.Connection;
+    public connection:mongoose.Connection;
     constructor(mongoDB_serv:string) {
         this.connection = mongoose.createConnection(mongoDB_serv);
     }

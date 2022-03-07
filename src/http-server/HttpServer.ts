@@ -5,7 +5,7 @@ import e from "express";
 import {Application} from "express-serve-static-core";
 
 export class HttpServer{
-    private readonly app:express.Express;
+    public readonly app:express.Express;
 
     constructor(){
         this.app = express();
