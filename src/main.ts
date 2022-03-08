@@ -2,6 +2,7 @@ import {HttpServer} from "./http-server/HttpServer";
 import {Auth} from "./routes/Auth";
 import {Database} from "./database/Database";
 import {config} from "dotenv";
+import {Player} from "./routes/Player";
 config()
 let httpServer = new HttpServer();
 httpServer.init();
@@ -12,3 +13,4 @@ const test = async()=> {
 }
 //httpServer.app.use("/auth",new Auth().AuthRoute)
 httpServer.routes('/auth',new Auth().AuthRoute);
+httpServer.routes("/player", new Player().PlayerRoute);
