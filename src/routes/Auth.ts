@@ -5,6 +5,7 @@ import {compareSync, genSaltSync, hashSync} from 'bcryptjs';
 import * as jose from "jose";
 import {KeyLike} from "jose";
 import {HydratedDocument} from "mongoose";
+import {query, validationResult} from "express-validator";
 
 export class Auth {
     private readonly routers: express.Router;
@@ -23,7 +24,11 @@ export class Auth {
     }
 
     register() {
-        this.routers.route('/register').post(async (req, res) => {
+        this.routers.route('/register').post(query('mail').isEmail(), query('password').isStrongPassword({minLength: 6}), async (req, res) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({errors: errors.array()});
+            }
             const databaseUser = await AuthModel.findOne({mail: req.query.mail})
             if (databaseUser != null) {
                 res.json({status: 403, message: "user already exist"});
@@ -52,7 +57,7 @@ export class Auth {
                     }
                     res.json({
                         status: 200, message: {
-                            user: databaseUser,
+                            user: newUser,
                             token: JWToken
                         }
 
@@ -63,7 +68,11 @@ export class Auth {
     }
 
     login() {
-        this.routers.route("/login").post(async (req, res) => {
+        this.routers.route("/login").post(query('mail').isEmail(), query('password').isStrongPassword({minLength: 6}), async (req, res) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({errors: errors.array()});
+            }
             const databaseUser = await AuthModel.findOne({mail: req.query.mail})
             if (databaseUser == null) {
                 res.json({status: 404, message: "user not found please create account to continue"});
@@ -125,8 +134,8 @@ export class Auth {
                     if (jwtVerifyResult == undefined) {
                         res.json({status: 403, message: "Forbidden"})
                     } else {
-                            console.log(res.clearCookie("token"))
-                            res.json({status: 202, message: "logout successful"});
+                        console.log(res.clearCookie("token"))
+                        res.json({status: 202, message: "logout successful"});
                     }
                 } catch (e) {
                     res.json({status: 403, message: {success: false, error: `JWT Decode failed ${e.message}`}});
