@@ -16,11 +16,11 @@ export const playerSchema: Schema = new Schema<IPlayer>({
 
 export interface IPlayer {
     playerId: string,
-    level: number,
-    score: number,
-    cybr_coin_amount: number,
+    level: string,
+    score: string,
+    cybr_coin_amount: string,
     cybr_coin_per_level: Object,
-    best_time: number
+    best_time: string
 
 }
 
