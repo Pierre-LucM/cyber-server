@@ -18,12 +18,11 @@ export class Auth {
     get AuthRoute(): express.Router {
         this.register();
         this.login();
+        this.logout();
         return this.routers;
     }
 
     register() {
-
-        //add password and hash
         this.routers.route('/register').post(async (req, res) => {
             const databaseUser = await AuthModel.findOne({mail: req.query.mail})
             if (databaseUser != null) {
@@ -32,19 +31,31 @@ export class Auth {
                 const newUser = await authModel.create({
                     mail: req.query.mail,
                     name: req.query.name,
-                    password: undefined
+                    password: undefined,
+                    _id: undefined,
                 })
                 const salt = genSaltSync(10);
-                newUser.password = hashSync(req.query.password, salt);
+                newUser.password = await hashSync(req.query.password, salt);
                 await newUser.save();
                 console.log(newUser);
                 if (newUser != null) {
 
+                    const JWToken = await this.createUserToken(newUser);
+                    let cookie = req.cookies.token;
+                    let options = {
+                        maxAge: 1000 * 60 * 60 * 24, // would expire after 1 day
+                        httpOnly: true, // The cookie only accessible by the web server
+                    }
+                    if (!cookie) {
+                        //create new cookie
+                        res.cookie("token", JWToken, options);
+                    }
                     res.json({
                         status: 200, message: {
-                            user: newUser,
-                            token: await this.createUserToken(newUser)
+                            user: databaseUser,
+                            token: JWToken
                         }
+
                     });
                 }
             }
@@ -60,11 +71,20 @@ export class Auth {
                 if (!compareSync(req.query.password, databaseUser.password)) {
                     throw new Error('Invalid password');
                 }
-
+                const JWToken = await this.createUserToken(databaseUser);
+                let cookie = req.cookies.token;
+                let options = {
+                    maxAge: 1000 * 60 * 60 * 24, // would expire after 1 day
+                    httpOnly: true, // The cookie only accessible by the web server
+                }
+                if (cookie == '') {
+                    //create new cookie
+                    res.cookie("token", JWToken);
+                }
                 res.json({
                     status: 200, message: {
                         user: databaseUser,
-                        token: await this.createUserToken(databaseUser)
+                        token: JWToken
                     }
                 });// send level information after send to the server
             }
@@ -90,5 +110,29 @@ export class Auth {
             kty: 'oct',
             k: process.env.JWT_SECRET as string
         }, 'HS256') as KeyLike;
+    }
+
+    logout() {
+        this.routers.route("/logout").delete(async (req, res) => {
+                console.log(req);
+                let jwtVerifyResult: jose.JWTVerifyResult;
+                try {
+                    jwtVerifyResult = await jose.jwtVerify(req.cookies.token as string, this.jwtPrivateKey, {
+                        issuer: 'urn:cybr:issuer',
+                        audience: 'urn:cybr:audience'
+                    });
+                    console.log(jwtVerifyResult);
+                    if (jwtVerifyResult == undefined) {
+                        res.json({status: 403, message: "Forbidden"})
+                    } else {
+                            console.log(res.clearCookie("token"))
+                            res.json({status: 202, message: "logout successful"});
+                    }
+                } catch (e) {
+                    res.json({status: 403, message: {success: false, error: `JWT Decode failed ${e.message}`}});
+                    return;
+                }
+            }
+        );
     }
 }

@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-
+import cookieParser from "cookie-parser"
 export class HttpServer{
     public readonly app:express.Express;
 
@@ -14,6 +14,7 @@ export class HttpServer{
             extended: false
         }));
         this.app.use(cors());
+        this.app.use(cookieParser());
     }
     routes(pathRoute:string,routingModule:express.Router):void{
         this.app.use(pathRoute,routingModule);
