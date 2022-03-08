@@ -10,5 +10,5 @@ console.log(new Auth().AuthRoute)
 const test = async()=> {
     console.log(await new Database(process.env.MONGODB_SERV))
 }
-httpServer.app.use("/auth",new Auth().AuthRoute)
-//httpServer.routes('/test/',new Auth().AuthRoute);
+//httpServer.app.use("/auth",new Auth().AuthRoute)
+httpServer.routes('/auth',new Auth().AuthRoute);

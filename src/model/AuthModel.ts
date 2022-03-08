@@ -5,12 +5,14 @@ config();
 export const authSchema:Schema= new Schema<IAuth>({
     name:Schema.Types.String,
     mail:Schema.Types.String,
+    password:Schema.Types.String
 },{
     collection: 'users'
 });
 export interface IAuth{
     name:string,
     mail:string,
+    password:string|undefined
 }
 
 const database = new Database(process.env.MONGODB_SERV);
