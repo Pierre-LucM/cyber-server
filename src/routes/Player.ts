@@ -1,5 +1,6 @@
 import PlayerModel, {IPlayer} from "../model/PlayerModel";
 import express from "express";
+import * as jose from "jose";
 
 export class Player {
     private readonly routers: express.Router;
@@ -17,12 +18,12 @@ export class Player {
     }
 
     addPlayerData() {
-        this.routers.route('/add').post(async (req, res) => {
-            const player = await PlayerModel.findOne({playerId: req.query.playerId});
-            //Add new database collection for user data with this information : userId, level, score, cybr_coin_amount, best_time
+        this.routers.route('/add').put(async (req, res) => {
+            const playerData = jose.decodeJwt(req.query.playerId as string);
+            const player = await PlayerModel.findOne({playerId: playerData._id});
             if (!player) {
                 const newPlayer: IPlayer = await PlayerModel.create({
-                    playerId: req.query.playerId,
+                    playerId: playerData._id,
                     level: req.query.level,
                     score: req.query.score,
                     cybr_coin_amount: req.query.cybr_coin_amount,
@@ -42,7 +43,8 @@ export class Player {
 
     getPlayerData() {
         this.routers.route('/get/:id').get(async (req, res) => {
-            const player: IPlayer = await PlayerModel.findOne({playerId: req.params});
+            const playerData = jose.decodeJwt(req.query.playerId as string);
+            const player: IPlayer = await PlayerModel.findOne({playerId: playerData._id});
             if (!player) {
                 res.json({status: 404, message: "Player not found user addPlayerData endpoint first"});
             } else {
@@ -53,11 +55,11 @@ export class Player {
 
     updatePlayerData() {
         this.routers.route("/patch").patch(async (req, res) => {
-                const playerPatch = await PlayerModel.findOne({playerId: req.query.playerId});
+                const playerData = jose.decodeJwt(req.query.playerId as string);
+                const playerPatch = await PlayerModel.findOne({playerId: playerData._id});
                 if (!playerPatch) {
                     res.json({status: 404, message: "Player not found user addPlayerData endpoint first"});
                 } else {
-
                     playerPatch.level = req.query.level as string;
                     playerPatch.score = req.query.score as string;
                     playerPatch.cybr_coin_amount = req.query.cybr_coin_amount as string;
@@ -73,15 +75,21 @@ export class Player {
     deletePlayerData() {
         this.routers.route('/delete').delete(async (req, res) => {
             try {
-                const playerDelete = await PlayerModel.findOneAndDelete({playerId: req.query.playerId});
-                const testDelete = await PlayerModel.findOne({playerId: req.query.playerId});
-                if (testDelete) {
-                    throw new Error("Delete error")
+                const playerData = jose.decodeJwt(req.query.playerId as string);
+                const playerDelete = await PlayerModel.findOneAndDelete({playerId: playerData._id});
+                if (!playerDelete) {
+                    throw new Error("Cannot delete data from non existing player");
                 }
-                res.json({status: 200, data: {message: " Delete operation successful", playerData: playerDelete}});
+                const testDelete = await PlayerModel.findOne({playerId: playerData.id});
+                if (testDelete) {
+                    throw new Error("Delete error");
+                } else {
+                    res.json({status: 200, message: " Delete operation successful"});
+                }
             } catch (e) {
-                res.json({status: 401, message: "Delete error : " + e.message});
+                return res.json({status: 400, message: "Delete error : " + e.message});
             }
+
         });
     }
 }
