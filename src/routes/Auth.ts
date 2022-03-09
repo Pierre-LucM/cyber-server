@@ -5,7 +5,7 @@ import {compareSync, genSaltSync, hashSync} from 'bcryptjs';
 import * as jose from "jose";
 import {KeyLike} from "jose";
 import {HydratedDocument} from "mongoose";
-import {query, validationResult} from "express-validator";
+import {body, query, validationResult} from "express-validator";
 
 export class Auth {
     private readonly routers: express.Router;
@@ -24,7 +24,8 @@ export class Auth {
     }
 
     register() {
-        this.routers.route('/register').post(query('mail').isEmail(), query('password').isStrongPassword({minLength: 6}), async (req, res) => {
+        this.routers.route('/register').post( body('mail').isEmail(),body('password').isStrongPassword({minLength:6}), async(req, res) => {
+            console.log(req.body);
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({errors: errors.array()});
@@ -34,13 +35,13 @@ export class Auth {
                 res.json({status: 403, message: "user already exist"});
             } else {
                 const newUser = await authModel.create({
-                    mail: req.query.mail,
-                    name: req.query.name,
+                    mail: req.body.mail,
+                    name: req.body.name,
                     password: undefined,
                     _id: undefined,
                 })
                 const salt = genSaltSync(10);
-                newUser.password = await hashSync(req.query.password, salt);
+                newUser.password = await hashSync(req.body.password, salt);
                 await newUser.save();
                 console.log(newUser);
                 if (newUser != null) {
