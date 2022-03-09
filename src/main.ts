@@ -1,6 +1,5 @@
 import {HttpServer} from "./http-server/HttpServer";
 import {Auth} from "./routes/Auth";
-import {Database} from "./database/Database";
 import {config} from "dotenv";
 import {Player} from "./routes/Player";
 config()
