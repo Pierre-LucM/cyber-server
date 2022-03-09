@@ -5,6 +5,6 @@ import {Player} from "./routes/Player";
 config()
 let httpServer = new HttpServer();
 httpServer.init();
-httpServer.start(3000);
+httpServer.start(parseInt(process.env.PORT,10)|5000);
 httpServer.routes('/auth',new Auth().AuthRoute);
 httpServer.routes("/player", new Player().PlayerRoute);

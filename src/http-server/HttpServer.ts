@@ -21,7 +21,7 @@ export class HttpServer{
     }
     start(port:number):void{
         this.app.listen(port,()=>{
-            console.log("server listen on localhost:"+port);
+            console.log("server listen on PORT : "+port);
         });
     }
     get App():express.Express{
