@@ -30,7 +30,7 @@ export class Auth {
             if (!errors.isEmpty()) {
                 return res.status(400).json({errors: errors.array()});
             }
-            const databaseUser = await AuthModel.findOne({mail: req.query.mail})
+            const databaseUser = await AuthModel.findOne({mail: req.body.mail})
             if (databaseUser != null) {
                 res.json({status: 403, message: "user already exist"});
             } else {
@@ -69,16 +69,16 @@ export class Auth {
     }
 
     login() {
-        this.routers.route("/login").post(query('mail').isEmail(), query('password').isStrongPassword({minLength: 6}), async (req, res) => {
+        this.routers.route("/login").post(body('mail').isEmail(), body('password').isStrongPassword({minLength: 6}), async (req, res) => {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({errors: errors.array()});
             }
-            const databaseUser = await AuthModel.findOne({mail: req.query.mail})
+            const databaseUser = await AuthModel.findOne({mail: req.body.mail})
             if (databaseUser == null) {
                 res.json({status: 404, message: "user not found please create account to continue"});
             } else {
-                if (!compareSync(req.query.password, databaseUser.password)) {
+                if (!compareSync(req.body.password, databaseUser.password)) {
                     throw new Error('Invalid password');
                 }
                 const JWToken = await this.createUserToken(databaseUser);

@@ -13,11 +13,19 @@ export class HttpServer{
         this.app.use(express.urlencoded({
             extended: false
         }));
-        this.app.use(cors({
-            origin: '*',
-            optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-        }));
+        this.app.use(cors());
         this.app.use(cookieParser());
+        this.app.use((req,res,next)=>{
+            // site que je veux autoriser à se connecter
+            res.setHeader('Access-Control-Allow-Origin', '*');
+
+            // méthodes de connexion autorisées
+            res.setHeader('Access-Control-Allow-Methods', ['GET', 'POST','PATCH','DELETE']);
+
+            res.setHeader('Access-Control-Allow-Headers', 'content-type');
+
+            next();
+        })
     }
     routes(pathRoute:string,routingModule:express.Router):void{
         this.app.use(pathRoute,routingModule);
