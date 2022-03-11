@@ -20,7 +20,7 @@ export interface IPlayer {
     score: string,
     cybr_coin_amount: string,
     cybr_coin_per_level: Object,
-    best_time: string
+    best_time: number
 
 }
 
