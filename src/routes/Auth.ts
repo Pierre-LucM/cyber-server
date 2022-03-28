@@ -5,7 +5,7 @@ import {compareSync, genSaltSync, hashSync} from 'bcryptjs';
 import * as jose from "jose";
 import {KeyLike} from "jose";
 import {HydratedDocument} from "mongoose";
-import {body, query, validationResult} from "express-validator";
+import {body, validationResult} from "express-validator";
 
 export class Auth {
     private readonly routers: express.Router;
@@ -24,7 +24,7 @@ export class Auth {
     }
 
     register() {
-        this.routers.route('/register').post( body('mail').isEmail(),body('password').isStrongPassword({minLength:6}), async(req, res) => {
+        this.routers.route('/register').post(body('mail').isEmail(), body('password').isStrongPassword({minLength: 6}), async (req, res) => {
             console.log(req.body);
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
@@ -32,7 +32,7 @@ export class Auth {
             }
             const databaseUser = await AuthModel.findOne({mail: req.body.mail})
             if (databaseUser != null) {
-                res.json({status: 403, message: "user already exist"});
+                res.status(403).send({message: "user already exist"});
             } else {
                 const newUser = await authModel.create({
                     mail: req.body.mail,
@@ -56,12 +56,11 @@ export class Auth {
                         //create new cookie
                         res.cookie("token", JWToken, options);
                     }
-                    res.json({
-                        status: 200, message: {
+                    res.status(200).send({
+                        message: {
                             user: newUser,
                             token: JWToken
                         }
-
                     });
                 }
             }
@@ -76,7 +75,7 @@ export class Auth {
             }
             const databaseUser = await AuthModel.findOne({mail: req.body.mail})
             if (databaseUser == null) {
-                res.json({status: 404, message: "user not found please create account to continue"});
+                res.status(404).send({message: "user not found please create account to continue"});
             } else {
                 if (!compareSync(req.body.password, databaseUser.password)) {
                     throw new Error('Invalid password');
@@ -91,8 +90,8 @@ export class Auth {
                     //create new cookie
                     res.cookie("token", JWToken);
                 }
-                res.json({
-                    status: 200, message: {
+                res.status(200).send({
+                    message: {
                         user: databaseUser,
                         token: JWToken
                     }
@@ -133,13 +132,13 @@ export class Auth {
                     });
                     console.log(jwtVerifyResult);
                     if (jwtVerifyResult == undefined) {
-                        res.json({status: 403, message: "Forbidden"})
+                        res.status(403).send({message: "Forbidden"})
                     } else {
                         console.log(res.clearCookie("token"))
-                        res.json({status: 202, message: "logout successful"});
+                        res.status(202).send({message: "logout successful"});
                     }
                 } catch (e) {
-                    res.json({status: 403, message: {success: false, error: `JWT Decode failed ${e.message}`}});
+                    res.status(403).send({message: {success: false, error: `JWT Decode failed ${e.message}`}});
                     return;
                 }
             }
